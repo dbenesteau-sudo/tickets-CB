@@ -364,6 +364,9 @@ async function imageToPdfBase64(dataUrl){
 
   const correctedDataUrl = canvas.toDataURL('image/jpeg', 0.92);
 
+  document.getElementById('preview-img').src = correctedDataUrl;
+  document.getElementById('preview-img-2').src = correctedDataUrl;
+
   const { jsPDF } = window.jspdf;
 
   const isPortrait = canvas.height >= canvas.width;
