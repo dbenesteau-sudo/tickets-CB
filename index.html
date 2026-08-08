@@ -352,26 +352,44 @@ async function imageToPdfBase64(dataUrl){
   const img = new Image();
   await new Promise(res => { img.onload = res; img.src = dataUrl; });
 
+  // Rotation de 90° vers la droite pour corriger les photos iPhone
+  const canvas = document.createElement('canvas');
+  canvas.width = img.height;
+  canvas.height = img.width;
+
+  const ctx = canvas.getContext('2d');
+  ctx.translate(canvas.width, 0);
+  ctx.rotate(Math.PI / 2);
+  ctx.drawImage(img, 0, 0);
+
+  const correctedDataUrl = canvas.toDataURL('image/jpeg', 0.92);
+
   const { jsPDF } = window.jspdf;
-  const isPortrait = img.height >= img.width;
+
+  const isPortrait = canvas.height >= canvas.width;
+
   const pdf = new jsPDF({
     orientation: isPortrait ? 'portrait' : 'landscape',
     unit: 'mm',
     format: 'a4'
   });
+
   const pageW = pdf.internal.pageSize.getWidth();
   const pageH = pdf.internal.pageSize.getHeight();
   const margin = 10;
   const maxW = pageW - margin*2;
   const maxH = pageH - margin*2;
-  const ratio = Math.min(maxW/img.width, maxH/img.height);
-  const w = img.width*ratio;
-  const h = img.height*ratio;
+
+  const ratio = Math.min(maxW/canvas.width, maxH/canvas.height);
+  const w = canvas.width*ratio;
+  const h = canvas.height*ratio;
   const x = (pageW-w)/2;
   const y = (pageH-h)/2;
-  pdf.addImage(img, 'JPEG', x, y, w, h);
+
+  pdf.addImage(correctedDataUrl, 'JPEG', x, y, w, h);
 
   const blob = pdf.output('blob');
+
   return await new Promise((resolve) => {
     const r = new FileReader();
     r.onload = () => resolve(r.result.split(',')[1]);
