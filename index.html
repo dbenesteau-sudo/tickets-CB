@@ -290,7 +290,7 @@
 <script>
 // ====== CONFIGURATION — à compléter après le déploiement Apps Script ======
 const CONFIG = {
-  APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbyYRZOHEAO_9mg-UxKtQhnCiBGQpZWEYFc6s2OwUJiQYNz8QQPV-jzuDSCuSBcAB-s8/exec",
+  APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbyDhf2KmDVqapVhtDANmIb0GwrN4ivyeLsdinAMEDWEr0TVI2Gz0QndsujmV7Qfxry6/exec",
   INITIALS: "DB"
 };
 // ============================================================================
@@ -396,21 +396,20 @@ document.getElementById('btn-send').addEventListener('click', async () => {
   btn.innerHTML = '<span class="spinner"></span>Envoi en cours…';
 
   try{
-    const resp = await fetch(CONFIG.APPS_SCRIPT_URL, {
+    // mode 'no-cors' : Google Apps Script redirige en interne et le navigateur
+    // refuse de lire cette réponse depuis une page hébergée ailleurs (GitHub Pages).
+    // On envoie donc "à l'aveugle" : si fetch() ne lève pas d'erreur, l'envoi est parti.
+    await fetch(CONFIG.APPS_SCRIPT_URL, {
       method: 'POST',
+      mode: 'no-cors',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
         pdfBase64: currentPdfBase64,
         initials: CONFIG.INITIALS
       })
     });
-    const data = await resp.json();
-    if(data.success){
-      document.getElementById('done-filename').textContent = data.fileName;
-      showStage('done');
-    } else {
-      throw new Error(data.error || 'Erreur inconnue');
-    }
+    document.getElementById('done-filename').textContent = 'Vérifiez dans le dossier Drive dans quelques secondes';
+    showStage('done');
   } catch(err){
     errorBox.innerHTML = '<div class="error-box">Échec de l\'envoi. Vérifiez votre connexion et réessayez.<br>('+err.message+')</div>';
   } finally {
